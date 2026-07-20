@@ -6,7 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 LOCAL_CONFIG_PATH = PROJECT_ROOT / ".gta"
 # Global fallback config path for user preferences
-CONFIG_DIR = Path.home() / ".config" / "gta"
+CONFIG_DIR = Path.home() / ".gta"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 DEFAULT_CONFIG = {

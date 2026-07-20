@@ -4,6 +4,7 @@ import pkgutil
 import git_tool_app.commands
 import git_tool_app.hooks
 from git_tool_app.core.git import pass_through_to_git
+from git_tool_app.utils.config import CONFIG_FILE
 
 def load_modules(package):
     """Dynamically loads submodules and returns those with a 'run' function."""
@@ -16,6 +17,14 @@ def load_modules(package):
 
 def main():
     # 1. Load hooks so they silently register to events in the background
+    if not CONFIG_FILE.exists():
+        print("First run detected! Launching setup wizard...")
+        # Dynamically import the setting command and run it
+        from git_tool_app.commands import setting
+        setting.run([])
+        # Exit after setup so they have a clean slate for their next command
+        return
+    
     load_modules(git_tool_app.hooks)
     
     # 2. Load commands to handle the user routing
