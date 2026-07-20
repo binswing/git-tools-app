@@ -22,12 +22,12 @@ def main():
     push_parser = subparsers.add_parser("push", help="Push to remote and play producer tag")
     push_parser.add_argument("--no-tag", action="store_true", help="Disable the producer tag")
 
-    # Command: merge
+    # Command: merge (Branch removed as a strict requirement so we can pass ALL flags down to git)
     merge_parser = subparsers.add_parser("merge", help="Merge branch and play producer tag")
-    merge_parser.add_argument("branch", type=str, help="Branch to merge")
     merge_parser.add_argument("--no-tag", action="store_true", help="Disable the producer tag")
 
-    args = parser.parse_args()
+    # Using parse_known_args allows us to capture native git arguments (like --set-upstream)
+    args, extra_git_args = parser.parse_known_args()
 
     if args.command == "commit":
         models = ai.get_installed_models()
@@ -57,14 +57,16 @@ def main():
             print("Commit aborted.")
 
     elif args.command == "push":
-        git_utils.run_git_command(["push"])
+        # Pass the extra arguments straight to git push
+        git_utils.run_git_command(["push"] + extra_git_args)
         audio.play_producer_tag("producer_tag.wav", disabled=args.no_tag)
         print("Push completed.")
 
     elif args.command == "merge":
-        git_utils.run_git_command(["merge", args.branch])
+        # Pass the extra arguments straight to git merge
+        git_utils.run_git_command(["merge"] + extra_git_args)
         audio.play_producer_tag("producer_tag.wav", disabled=args.no_tag)
-        print(f"Merged {args.branch}.")
+        print("Merge command executed.")
 
 if __name__ == "__main__":
     main()
