@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+*.jsonl
+
+# Virtual environments
+.venv
+
+# Environment variables
+.env
+.env.development
+.env.staging
+.env.production
+requirements.txt
+
+# Misc
+*.ipynb
+uv.lock
+
+# Delete the draft of the entire project done
+!draft.ipynb
+
+# Reports
+evals/reports/
