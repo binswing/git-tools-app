@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "git-tool-app"
+version = "0.1.0"
+description = "GTA (Git Tool App)"
+authors = [
+    { name = "b1nswing" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "requests",
+    "pygame"
+]
+
+[project.scripts]
+gta = "git_tool_app.main:main"

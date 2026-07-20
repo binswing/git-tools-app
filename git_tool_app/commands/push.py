@@ -1,0 +1,18 @@
+import argparse
+import subprocess
+from git_tool_app.core import events
+
+def run(args):
+    parser = argparse.ArgumentParser(prog="gta push", description="Push to remote.")
+    parser.add_argument("--no-hooks", action="store_true", help="Skip all post-execution features")
+    parsed_args, extra_git_args = parser.parse_known_args(args)
+    
+    if not parsed_args.no_hooks:
+        events.trigger("pre-push", parsed_args)
+
+    print(f"Executing: git push {' '.join(extra_git_args)}")
+    result = subprocess.run(["git", "push"] + extra_git_args)
+    
+    # If the push was successful (exit code 0), trigger the hooks
+    if result.returncode == 0 and not parsed_args.no_hooks:
+        events.trigger("post-push", parsed_args)

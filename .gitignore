@@ -20,6 +20,7 @@ requirements.txt
 # Misc
 *.ipynb
 uv.lock
+note.txt
 
 # Delete the draft of the entire project done
 !draft.ipynb
