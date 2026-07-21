@@ -1,6 +1,7 @@
 import os
 import argparse
 from git_tool_app.core import ai, git
+from git_tool_app.ai.features import commitgen
 from git_tool_app.utils.config import load_config
 
 def get_commit_prompt(config):
@@ -33,7 +34,7 @@ def run(args):
     prompt = get_commit_prompt(config)
     
     print(f"Generating commit message using {model_to_use}...")
-    message = ai.generate_commit_message(model_to_use, prompt, diff)
+    message = commitgen.generate_commit_message(model_to_use, prompt, diff)
     
     print(f"\nGenerated Message:\n{message}\n")
     confirm = input("Do you want to commit with this message? (y/n): ")

@@ -1,1 +1,1 @@
-You are an expert developer. Read the code diff and write a commit message following the Conventional Commits format (e.g., feat:, fix:, docs:, chore:). Keep it under 50 characters.
+Read the code diff and write a commit message following the Conventional Commits format (e.g., feat:, fix:, docs:, chore:). Keep it under 50 characters.

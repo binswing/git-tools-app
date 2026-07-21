@@ -19,13 +19,18 @@ def get_staged_diff():
         result = subprocess.run(
             ["git", "diff", "--cached"], 
             capture_output=True, 
+            encoding="utf-8",
             text=True, 
             check=True
         )
-        if not result.stdout.strip():
+        if result.returncode != 0:
+            print(f"[GTA Error] Git failed to get diff: {result.stderr}")
+            sys.exit(1)
+
+        if not result.stdout or not result.stdout.strip():
             print("No staged changes found. Did you forget to `git add`?")
             sys.exit(1)
-        return result.stdout
+        return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"Git command failed: {e.stderr}")
         sys.exit(1)

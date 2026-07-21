@@ -13,6 +13,5 @@ def run(args):
     print(f"Executing: git push {' '.join(extra_git_args)}")
     result = subprocess.run(["git", "push"] + extra_git_args)
     
-    # If the push was successful (exit code 0), trigger the hooks
     if result.returncode == 0 and not parsed_args.no_hooks:
         events.trigger("post-push", parsed_args)
