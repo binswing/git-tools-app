@@ -5,7 +5,7 @@ from git_tool_app.ai.features import commitgen
 from git_tool_app.utils.config import load_config
 
 def get_commit_prompt(config):
-    prompt_path = config.get("default_prompt_path")
+    prompt_path = config.get("commitmsg_prompt_path")
     if os.path.exists(prompt_path):
         with open(prompt_path, "r") as f:
             return f.read()

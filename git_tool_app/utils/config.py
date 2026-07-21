@@ -49,7 +49,7 @@ def load_config():
 
     # Map default target files relative to the resolved directories
     config["producer_tag_path"] = str(Path(config["assets_dir"]) / "producer_tag.wav")
-    config["default_prompt_path"] = str(Path(config["templates_dir"]) / "COMMITMSG.md")
+    config["commitmsg_prompt_path"] = str(Path(config["templates_dir"]) / "COMMITMSG.md")
 
     return config
 
@@ -62,7 +62,7 @@ def save_config(key, value):
     config[key] = value
 
     # Strip out dynamic run-time paths before saving so the JSON stays clean
-    dynamic_keys = FOLDER_NAMES + ["producer_tag_path", "default_prompt_path"]
+    dynamic_keys = FOLDER_NAMES + ["producer_tag_path", "commitmsg_prompt_path"]
     static_config = {k: v for k, v in config.items() if k not in dynamic_keys}
     
     with open(CONFIG_FILE, "w") as f:
