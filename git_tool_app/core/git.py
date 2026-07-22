@@ -1,44 +1,51 @@
 import subprocess
 import sys
+from git_tool_app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def pass_through_to_git(args):
-    """Executes a native git command and streams stdout/stderr straight to the Ubuntu terminal."""
+    """Executes a native git command and streams output straight to terminal."""
     try:
-        # Using call() blocks and binds directly to the terminal UI
+        logger.debug(f"Passing raw command through to native git: git {' '.join(args)}")
         exit_code = subprocess.call(["git"] + args)
         sys.exit(exit_code)
     except KeyboardInterrupt:
         sys.exit(130)
     except Exception as e:
-        print(f"Fatal error executing git: {e}")
+        logger.error(f"Fatal error executing standard git command: {e}", exc_info=True)
         sys.exit(1)
 
 def get_staged_diff():
-    """Captures the output of git diff --cached for Ollama prompts."""
+    """Captures staged diff with UTF-8 encoding handling."""
     try:
+        logger.debug("Fetching staged changes via `git diff --cached`...")
         result = subprocess.run(
             ["git", "diff", "--cached"], 
             capture_output=True, 
             encoding="utf-8",
-            text=True, 
-            check=True
+            errors="replace",
+            text=True
         )
+        
         if result.returncode != 0:
-            print(f"[GTA Error] Git failed to get diff: {result.stderr}")
+            logger.error(f"Git failed to retrieve diff: {result.stderr}")
             sys.exit(1)
 
         if not result.stdout or not result.stdout.strip():
-            print("No staged changes found. Did you forget to `git add`?")
-            sys.exit(1)
+            logger.warning("No staged changes found. Did you forget to run `git add`?")
+            sys.exit(0)
+            
         return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"Git command failed: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Failed to execute git diff: {e}", exc_info=True)
         sys.exit(1)
 
 def execute_commit(message):
     """Commits staged changes with the AI-generated message."""
     try:
+        logger.debug("Executing `git commit` with AI message...")
         subprocess.run(["git", "commit", "-m", message], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Commit failed. Ensure changes are staged.")
+        logger.error("Commit failed. Ensure staged changes exist.", exc_info=True)
         sys.exit(1)

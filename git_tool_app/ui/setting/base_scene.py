@@ -1,10 +1,16 @@
 import os
+import subprocess
 from abc import ABC, abstractmethod
+from git_tool_app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class BaseScene(ABC):
     def clear_screen(self):
         """Cross-platform terminal clear."""
-        os.system('clear' if os.name == 'posix' else 'cls')
+        logger.debug("Clearing terminal screen...")
+        
+        subprocess.run('clear' if os.name == 'posix' else 'cls', shell=True)
 
     @abstractmethod
     def run(self, config_context: dict) -> str:

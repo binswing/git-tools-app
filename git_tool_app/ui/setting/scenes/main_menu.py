@@ -1,13 +1,16 @@
 import questionary
 from git_tool_app.ui.setting.base_scene import BaseScene
+from git_tool_app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class MainMenuScene(BaseScene):
     def run(self, config_context: dict) -> str:
         self.clear_screen()
-        print("=========================================")
-        print("█▀▀ ▀█▀ ▄▀█   █▀ █▀▀ ▀█▀ █ █ █▀█")
-        print("█▄█  █  █▀█   ▄█ ██▄  █  █▄█ █▀▀")
-        print("=========================================\n")
+        logger.info("=========================================")
+        logger.info("█▀▀ ▀█▀ ▄▀█   █▀ █▀▀ ▀█▀ █ █ █▀█")
+        logger.info("█▄█  █  █▀█   ▄█ ██▄  █  █▄█ █▀▀")
+        logger.info("=========================================\n")
 
         choice = questionary.select(
             "Main Menu - Select a category to configure:",
@@ -19,5 +22,5 @@ class MainMenuScene(BaseScene):
             ]
         ).ask()
 
-        # If user presses Ctrl+C, questionary returns None. Fallback to discard.
+        logger.debug(f"User selected main menu action: {choice}")
         return choice or "quit_discard"

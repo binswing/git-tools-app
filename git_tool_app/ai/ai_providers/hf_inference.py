@@ -1,6 +1,10 @@
 import os
 import requests
 import sys
+from git_tool_app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 MODELS_URL = "https://huggingface.co/api/models"
 CHATS_URL = "https://api-inference.huggingface.co/models/{model}"
 API_KEY_FALLBACK = "HF_TOKEN"
@@ -9,18 +13,16 @@ API_KEY = "GTA_" + API_KEY_FALLBACK
 def get_api_key():
     key = os.getenv(API_KEY)
     if not key:
-        print(f"[GTA Error] {API_KEY} environment variable is missing.")
-        print(f"[GTA] Trying {API_KEY_FALLBACK} environment variable as a fallback.")
+        logger.debug(f"{API_KEY} environment variable is missing. Trying {API_KEY_FALLBACK} as a fallback.")
         key_fallback = os.getenv(API_KEY_FALLBACK)
         if not key_fallback:
-            print(f"[GTA Error] {API_KEY_FALLBACK} environment variable is missing.")
-            print(f"Set it in your terminal: export {API_KEY}='your_api_key'")
+            logger.error(f"Both {API_KEY} and {API_KEY_FALLBACK} are missing.")
+            logger.error(f"Set it in your terminal: export {API_KEY}='your_api_key'")
             sys.exit(1)
         return key_fallback
     return key
 
 def get_models():
-    """Fetches the top 15 trending text-generation models from the HF Hub."""
     url = MODELS_URL
     params = {
         "pipeline_tag": "text-generation",
@@ -29,12 +31,13 @@ def get_models():
     }
     
     try:
+        logger.debug("Fetching trending Hugging Face models...")
         response = requests.get(url, params=params)
         response.raise_for_status()
         models = response.json()
         return [m["id"] for m in models]
     except Exception as e:
-        print(f"[GTA Error] Could not fetch Hugging Face models: {e}")
+        logger.error(f"Could not fetch Hugging Face models: {e}", exc_info=True)
         sys.exit(1)
 
 def generate_message(model, system_prompt, user_prompt):
@@ -46,7 +49,6 @@ def generate_message(model, system_prompt, user_prompt):
         "Content-Type": "application/json"
     }
     
-    # Constructing a standard prompt format. 
     prompt = f"{system_prompt}\n{user_prompt}"
     
     payload = {
@@ -59,11 +61,11 @@ def generate_message(model, system_prompt, user_prompt):
     }
     
     try:
+        logger.debug(f"Sending generation request to Hugging Face Inference (Model: {model})")
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
         
-        # The HF Inference API usually returns a list of dictionaries for text generation
         if isinstance(data, list) and len(data) > 0:
             return data[0].get("generated_text", "").strip()
         elif isinstance(data, dict):
@@ -72,11 +74,10 @@ def generate_message(model, system_prompt, user_prompt):
         return str(data)
         
     except requests.exceptions.HTTPError as e:
-        # HF often throws 503s if the model is currently loading into serverless memory
-        print(f"\n[GTA Error] Hugging Face API Error: {e.response.status_code}")
-        print(f"Details: {e.response.text}")
-        print("Note: HF Serverless models sometimes take a minute to load. Try again shortly.")
+        logger.error(f"Hugging Face API Error: {e.response.status_code}")
+        logger.debug(f"HF Error Details: {e.response.text}")
+        logger.info("Note: HF Serverless models sometimes take a minute to load. Try again shortly.")
         sys.exit(1)
     except Exception as e:
-        print(f"\n[GTA Error] Failed to generate message from HF: {e}")
+        logger.error(f"Failed to generate message from HF: {e}", exc_info=True)
         sys.exit(1)

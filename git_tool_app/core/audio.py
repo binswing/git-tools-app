@@ -1,21 +1,24 @@
 import os
-# Keeps your Ubuntu terminal clean by hiding the Pygame welcome message
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
+from git_tool_app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def play_audio(audio_path):
     """Initializes the mixer and plays the audio file, blocking until finished."""
-    if not os.path.exists(audio_path):
-        print(f"[GTA] Audio file not found at: {audio_path}")
+    if not audio_path or not os.path.exists(audio_path):
+        logger.warning(f"Audio file not found at: {audio_path}")
         return
         
     try:
+        logger.debug(f"Initializing Pygame audio mixer for file: {audio_path}")
         pygame.mixer.init()
         pygame.mixer.music.load(audio_path)
         pygame.mixer.music.play()
         
-        # Keep the process alive while the audio plays
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
+        logger.debug("Finished audio playback.")
     except Exception as e:
-        print(f"[GTA] Could not play audio: {e}")
+        logger.error(f"Could not play audio tag: {e}", exc_info=True)

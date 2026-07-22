@@ -4,41 +4,49 @@ import pkgutil
 import git_tool_app.commands
 import git_tool_app.hooks
 from git_tool_app.core.git import pass_through_to_git
-from git_tool_app.utils.config import CONFIG_FILE
+from git_tool_app.utils.logger import get_logger
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = get_logger(__name__)
 
 def load_modules(package):
     """Dynamically loads submodules and returns those with a 'run' function."""
     registry = {}
     for _, module_name, _ in pkgutil.iter_modules(package.__path__):
-        module = importlib.import_module(f"{package.__name__}.{module_name}")
-        if hasattr(module, 'run'):
-            registry[module_name] = module.run
+        try:
+            module = importlib.import_module(f"{package.__name__}.{module_name}")
+            if hasattr(module, 'run'):
+                registry[module_name] = module.run
+                logger.debug(f"Loaded module '{module_name}' from package '{package.__name__}'")
+        except Exception as e:
+            logger.error(f"Failed to load module '{module_name}' from '{package.__name__}': {e}", exc_info=True)
     return registry
 
 def main():
-    # 1. Load hooks so they silently register to events in the background
+    logger.debug("Starting GTA CLI application execution...")
     
+    # 1. Load hooks to register events silently in background
     load_modules(git_tool_app.hooks)
     
-    # 2. Load commands to handle the user routing
+    # 2. Load custom GTA commands
     commands_registry = load_modules(git_tool_app.commands)
     
     # 3. Handle naked command `gta`
     if len(sys.argv) < 2:
+        logger.debug("No subcommand specified. Passing through to native git...")
         pass_through_to_git([])
         return
 
     command = sys.argv[1]
     args = sys.argv[2:]
 
-    # 4. Route the execution
+    # 4. Route command execution
     if command in commands_registry:
+        logger.debug(f"Routing to registered GTA command: {command}")
         commands_registry[command](args)
     else:
-        # Fallback to standard Git commands (status, log, rebase, etc.)
+        logger.debug(f"Subcommand '{command}' not in GTA registry. Passing through to native git...")
         pass_through_to_git(sys.argv[1:])
 
 if __name__ == "__main__":
