@@ -41,14 +41,20 @@ def get_staged_diff():
         logger.error(f"Failed to execute git diff: {e}", exc_info=True)
         sys.exit(1)
 
-def execute_commit(message):
-    """Commits staged changes with the AI-generated message."""
+def execute_commit(message, extra_args=None):
+    """Executes the git commit command, passing through any extra flags."""
+    if extra_args is None:
+        extra_args = []
+        
+    # Construct the base command and append any extra flags (like --no-verify)
+    command = ["git", "commit", "-m", message] + extra_args
+    logger.debug(f"Executing commit command: {' '.join(command)}")
+    
     try:
-        logger.debug("Executing `git commit` with AI message...")
-        subprocess.run(["git", "commit", "-m", message], check=True)
+        subprocess.run(command, check=True)
     except subprocess.CalledProcessError as e:
-        logger.error("Commit failed. Ensure staged changes exist.", exc_info=True)
-        sys.exit(1)
+        logger.error(f"Git commit failed: {e}")
+        raise
 
 def get_recent_commits(limit=5):
     """Fetches the recent commit history to provide context for the AI."""

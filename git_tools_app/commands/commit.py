@@ -21,7 +21,7 @@ def run(args):
     parser = argparse.ArgumentParser(prog="gta commit", description="Generate an AI commit message.")
     parser.add_argument("--model", type=str, help="Override default model")
     parser.add_argument("--no-hooks", action="store_true", help="Skip all post-execution features")
-    parsed_args, _ = parser.parse_known_args(args)
+    parsed_args, extra_git_args = parser.parse_known_args(args)
 
     config = load_config()
     models = ai.get_installed_models()
@@ -46,7 +46,7 @@ def run(args):
     confirm = input("Do you want to commit with this message? (y/n): ")
     
     if confirm.lower() == 'y':
-        git.execute_commit(message)
+        git.execute_commit(message, extra_git_args)
         logger.info("Commit successful!")
         
         if not parsed_args.no_hooks:
