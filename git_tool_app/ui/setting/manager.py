@@ -35,6 +35,7 @@ class SceneManager:
             save_config("ai_provider", self.config_context.get("ai_provider"))
             save_config("model", self.config_context.get("model"))
             save_config("play_tags", self.config_context.get("play_tags"))
+            save_config("audio_hook_events", self.config_context.get("audio_hook_events"))
             logger.info("\nSettings applied successfully!")
             logger.info(f"Saved to: {CONFIG_FILE}\n")
         else:

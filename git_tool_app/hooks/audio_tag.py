@@ -15,6 +15,12 @@ def play_tag(parsed_args):
     else:
         logger.debug("Audio tag trigger ignored (Audio tags are disabled in settings).")
 
-# Register subscriptions
-events.subscribe("post-push", play_tag)
-events.subscribe("post-merge", play_tag)
+# ==========================================
+# Dynamic Event Subscription
+# ==========================================
+config = load_config()
+active_events = config.get("audio_hook_events", ["post-push", "post-merge"])
+
+for git_event in active_events:
+    events.subscribe(git_event, play_tag)
+    logger.debug(f"Audio tag hook automatically subscribed to '{git_event}'")

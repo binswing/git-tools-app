@@ -17,6 +17,7 @@ DEFAULT_CONFIG = {
     "ai_provider": "ollama",
     "model": "llama3",
     "play_tags": True,
+    "audio_hook_events": ["post-push", "post-merge"]
 }
 FOLDER_NAMES = ["assets", "templates"]
 
