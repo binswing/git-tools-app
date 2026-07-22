@@ -1,23 +1,31 @@
-""" Event manager module. """
+from git_tool_app.utils.config import load_config
+from git_tool_app.core.hook_api import get_available_hooks
 from git_tool_app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-_subscribers = {}
-
-def subscribe(event_name, callback):
-    """Hooks use this to listen for specific Git events."""
-    if event_name not in _subscribers:
-        _subscribers[event_name] = []
-    _subscribers[event_name].append(callback)
-    logger.debug(f"Hook '{callback.__name__}' subscribed to event '{event_name}'")
-
 def trigger(event_name, *args, **kwargs):
-    """Commands use this to announce that an event just happened."""
+    """Sequentially processes user addons assigned to the triggered event."""
     logger.debug(f"Triggering event: {event_name}")
-    if event_name in _subscribers:
-        for callback in _subscribers[event_name]:
+    
+    config = load_config()
+    addons = config.get("addons", [])
+    available_hooks = get_available_hooks()
+    
+    for addon in addons:
+        # Check if the addon is active and assigned to this event
+        if addon.get("enabled", False) and event_name in addon.get("events", []):
+            hook_type = addon.get("hook_type")
+            hook_registry = available_hooks.get(hook_type)
+            
+            if not hook_registry:
+                logger.error(f"Addon '{addon.get('name')}' relies on missing hook: {hook_type}")
+                continue
+                
             try:
-                callback(*args, **kwargs)
+                logger.debug(f"Executing addon '{addon.get('name')}' (Type: {hook_type})")
+                module = hook_registry["module"]
+                # Pass the addon's specific options to the hook template
+                module.execute(addon.get("options", {}), args[0], config)
             except Exception as e:
-                logger.error(f"Error executing hook [{callback.__name__}]: {e}", exc_info=True)
+                logger.error(f"Addon '{addon.get('name')}' failed during execution: {e}", exc_info=True)
