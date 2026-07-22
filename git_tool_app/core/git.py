@@ -55,7 +55,7 @@ def get_recent_commits(limit=5):
     try:
         logger.debug(f"Fetching last {limit} commits for AI context...")
         result = subprocess.run(
-            ["git", "log", f"-n {limit}", "--oneline"],
+            ["git", "log", "-n", str(limit), "--oneline"],
             capture_output=True,
             encoding="utf-8",
             errors="replace",

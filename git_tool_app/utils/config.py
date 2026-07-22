@@ -63,7 +63,7 @@ def save_config(key, value):
     config = load_config()
     config[key] = value
 
-    dynamic_keys = FOLDER_NAMES + ["commitmsg_prompt_path"]
+    dynamic_keys = [f"{name}_dir" for name in FOLDER_NAMES] + ["commitmsg_prompt_path"]
     static_config = {k: v for k, v in config.items() if k not in dynamic_keys}
     
     try:
