@@ -35,10 +35,11 @@ def run(args):
             return
 
     diff = git.get_staged_diff()
+    recent_commits = git.get_recent_commits(limit=5)
     prompt = get_commit_prompt(config)
     
     logger.info(f"Generating commit message using {model_to_use}...")
-    message = commitgen.generate_commit_message(model_to_use, prompt, diff)
+    message = commitgen.generate_commit_message(model_to_use, prompt, diff, recent_commits)
     
     logger.info(f"\nGenerated Message:\n{message}\n")
     confirm = input("Do you want to commit with this message? (y/n): ")

@@ -49,3 +49,25 @@ def execute_commit(message):
     except subprocess.CalledProcessError as e:
         logger.error("Commit failed. Ensure staged changes exist.", exc_info=True)
         sys.exit(1)
+
+def get_recent_commits(limit=5):
+    """Fetches the recent commit history to provide context for the AI."""
+    try:
+        logger.debug(f"Fetching last {limit} commits for AI context...")
+        result = subprocess.run(
+            ["git", "log", f"-n {limit}", "--oneline"],
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            text=True
+        )
+        
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+            
+        logger.debug("No previous commit history found (might be a new repository).")
+        return "No previous commits found."
+        
+    except Exception as e:
+        logger.warning(f"Failed to fetch commit history: {e}", exc_info=True)
+        return "Could not retrieve commit history."
