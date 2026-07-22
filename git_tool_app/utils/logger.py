@@ -41,7 +41,8 @@ def get_logger(name="gta"):
         c_handler.setFormatter(logging.Formatter('[%(levelname)s] %(module)s: %(message)s'))
     else:
         c_handler.setFormatter(logging.Formatter('%(message)s'))
-
+        
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     # 2. File Handler: JSONL output for deep debugging (Appends to ~/.gta/gta.log)
     log_file = CONFIG_DIR / "gta.log"
     f_handler = logging.FileHandler(log_file, encoding="utf-8")
