@@ -4,7 +4,7 @@ import shutil
 import uuid
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 DEFAULT_GTA_DIR = PROJECT_ROOT / ".gta"
 CONFIG_DIR = Path.home() / ".gta"
 CONFIG_FILE = CONFIG_DIR / "config.json"
