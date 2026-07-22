@@ -8,7 +8,7 @@ from git_tool_app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 def get_commit_prompt(config):
-    prompt_path = config.get("default_prompt_path")
+    prompt_path = config.get("commitmsg_prompt_path")
     if prompt_path and os.path.exists(prompt_path):
         logger.debug(f"Loading commit prompt template from: {prompt_path}")
         with open(prompt_path, "r") as f:
