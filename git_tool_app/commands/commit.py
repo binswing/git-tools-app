@@ -1,6 +1,6 @@
 import os
 import argparse
-from git_tool_app.core import ai, git
+from git_tool_app.core import ai, git, events
 from git_tool_app.ai.features import commitgen
 from git_tool_app.utils.config import load_config
 from git_tool_app.utils.logger import get_logger
@@ -20,6 +20,7 @@ def run(args):
     logger.debug(f"Running gta commit with args: {args}")
     parser = argparse.ArgumentParser(prog="gta commit", description="Generate an AI commit message.")
     parser.add_argument("--model", type=str, help="Override default model")
+    parser.add_argument("--no-hooks", action="store_true", help="Skip all post-execution features")
     parsed_args, _ = parser.parse_known_args(args)
 
     config = load_config()
@@ -47,5 +48,9 @@ def run(args):
     if confirm.lower() == 'y':
         git.execute_commit(message)
         logger.info("Commit successful!")
+        
+        if not parsed_args.no_hooks:
+            events.trigger("post-commit", parsed_args)
+            
     else:
         logger.info("Commit aborted by user.")
