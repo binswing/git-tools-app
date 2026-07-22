@@ -36,6 +36,14 @@ def run(args):
             return
 
     diff = git.get_staged_diff()
+    if not diff:
+        if "--allow-empty" in extra_git_args:
+            logger.info("Empty diff detected, but --allow-empty flag was passed.")
+            diff = "[No code changes. This is an empty commit forced by the user.]"
+        else:
+            logger.error("Nothing to commit. Please run `git add` to stage your changes first.")
+            return
+
     recent_commits = git.get_recent_commits(limit=5)
     prompt = get_commit_prompt(config)
     

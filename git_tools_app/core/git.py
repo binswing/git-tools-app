@@ -17,29 +17,28 @@ def pass_through_to_git(args):
         sys.exit(1)
 
 def get_staged_diff():
-    """Captures staged diff with UTF-8 encoding handling."""
+    """Fetches the staged changes, handling the initial commit edge case."""
     try:
-        logger.debug("Fetching staged changes via `git diff --cached`...")
-        result = subprocess.run(
-            ["git", "diff", "--cached"], 
-            capture_output=True, 
-            encoding="utf-8",
-            errors="replace",
-            text=True
-        )
+        # Check if HEAD exists (it won't on the very first commit of a new repo)
+        head_check = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], capture_output=True, text=True)
         
-        if result.returncode != 0:
-            logger.error(f"Git failed to retrieve diff: {result.stderr}")
-            sys.exit(1)
+        if head_check.returncode != 0:
+            logger.debug("Initial commit detected. Diffing against the empty tree hash.")
+            # This magic hash represents a completely empty Git tree
+            diff_cmd = ["git", "diff", "--cached", "4b825dc642cb6eb9a060e54bf8d69288fbee4904"]
+        else:
+            diff_cmd = ["git", "diff", "--cached"]
 
-        if not result.stdout or not result.stdout.strip():
+        result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
+        diff_output = result.stdout.strip()
+        
+        if not diff_output:
             logger.warning("No staged changes found. Did you forget to run `git add`?")
-            sys.exit(0)
             
-        return result.stdout.strip()
-    except Exception as e:
-        logger.error(f"Failed to execute git diff: {e}", exc_info=True)
-        sys.exit(1)
+        return diff_output
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to fetch staged diff: {e}")
+        return ""
 
 def execute_commit(message, extra_args=None):
     """Executes the git commit command, passing through any extra flags."""
