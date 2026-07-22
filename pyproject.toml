@@ -19,3 +19,6 @@ dependencies = [
 
 [project.scripts]
 gta = "git_tools_app.main:main"
+
+[tool.setuptools]
+include-package-data = true
