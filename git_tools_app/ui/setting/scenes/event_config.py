@@ -1,3 +1,4 @@
+import time
 import uuid
 from pathlib import Path
 import questionary
@@ -77,7 +78,7 @@ class EventConfigScene(BaseScene):
             choices.append(questionary.Choice("Create New Addon for this Event", value="create"))
             choices.append(questionary.Choice("Back", value="back"))
             
-            instruction = "Select addon to reorder, or create a new one:" if event_addons else "Select action:"
+            instruction = "Select addon to reorder/unregister, or create a new one:" if event_addons else "Select action:"
             
             selected_idx = questionary.select(instruction, choices=choices).ask()
             
@@ -88,6 +89,28 @@ class EventConfigScene(BaseScene):
                 self._create_addon_for_event(config_context, event)
                 continue
                 
+            # Intercept the flow to ask if they want to Reorder or Unregister
+            addon_name = addons[selected_idx]['name']
+            action = questionary.select(
+                f"Action for '{addon_name}':",
+                choices=[
+                    questionary.Choice("Reorder", value="reorder"),
+                    questionary.Choice(f"Unregister from {event}", value="unregister"),
+                    questionary.Choice("Cancel", value="cancel")
+                ]
+            ).ask()
+
+            if action == "cancel" or action is None:
+                continue
+
+            if action == "unregister":
+                if event in addons[selected_idx]["events"]:
+                    addons[selected_idx]["events"].remove(event)
+                print(f"\nUnregistered '{addon_name}' from the {event} pipeline.")
+                time.sleep(1)
+                continue
+
+            # If Reorder, proceed with the surgical reordering logic
             current_pos = next(i for i, (m_idx, _) in enumerate(event_addons) if m_idx == selected_idx)
             
             pos_choices = []
@@ -101,7 +124,7 @@ class EventConfigScene(BaseScene):
             pos_choices.append(questionary.Choice("Cancel", value="cancel"))
             
             new_pos = questionary.select(
-                f"Move '{addons[selected_idx]['name']}' to the position of:", 
+                f"Move '{addon_name}' to the position of:", 
                 choices=pos_choices
             ).ask()
             
@@ -133,7 +156,6 @@ class EventConfigScene(BaseScene):
         name = questionary.text("Addon Name:").ask()
         if not name: return
 
-        # Calculate max padding dynamically based on the longest hook ID
         max_pad = max((len(h_id) for h_id in available_hooks.keys()), default=15)
 
         hook_choices = [
@@ -163,7 +185,6 @@ class EventConfigScene(BaseScene):
         config_context["addons"].append(new_addon)
         print(f"\nSuccessfully attached '{name}' to the {event} pipeline!")
         
-        import time
         time.sleep(1.2)
 
     def _prompt_dynamic_schema(self, addon_id, schema_options):
