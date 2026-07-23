@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "git-tools-app"
 version = "0.1.0"
 description = "GTA (Git Tool App)"
+readme = "README.md"
 authors = [
     { name = "b1nswing" }
 ]
@@ -17,8 +18,99 @@ dependencies = [
     "python-dotenv"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.0.0",
+    "black",
+    "isort",
+    "flake8",
+    "ruff",
+    "pyright",
+    "detect-secrets"
+]
+
 [project.scripts]
 gta = "git_tools_app.main:main"
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["git_tools_app*"]
+
+[tool.setuptools.package-data]
+git_tools_app = ["config.json", "assets/*", "hooks/*"]
+
+[tool.black]
+line-length = 119
+exclude = "venv|\\.venv|build|migrations"
+
+[tool.isort]
+profile = "black"
+multi_line_output = "VERTICAL_HANGING_INDENT"
+force_grid_wrap = 2
+line_length = 119
+skip = ["migrations", "venv", ".venv", "build"]
+
+[tool.ruff]
+line-length = 119
+exclude = ["migrations", "*.ipynb", "venv", ".venv", "build"]
+
+[tool.ruff.lint]
+# Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
+select = ["E", "F", "B", "ERA", "D"]
+# Never enforce `E501` (line length violations).
+ignore = ["E501", "D203", "D213", "B904", "B008"]
+# Avoid trying to fix flake8-bugbear (`B`) violations.
+unfixable = ["B"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Ignore `E402` (import violations) in all `__init__.py` files
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+
+[tool.pyright]
+include = ["git_tools_app"]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "migrations",
+    "venv",
+    "build"
+]
+stubPath = "typings"
+pythonVersion = "3.8"
+typeCheckingMode = "standard"
+
+# Tightened from defaults — cheap real-bug catchers
+reportDuplicateImport = "error"
+reportInvalidTypeVarUse = "error"
+reportSelfClsParameterName = "error"
+
+# Style nudges
+reportImplicitOverride = "warning"
+
+[tool.flake8]
+docstring-convention = "all"
+ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100"]
+exclude = "venv|\\.venv|build|migrations"
+max-line-length = 119
+# radon
+radon-max-cc = 10
+
+[tool.pylint."messages control"]
+disable = [
+    "line-too-long",
+    "trailing-whitespace",
+    "missing-function-docstring",
+    "consider-using-f-string",
+    "import-error",
+    "too-few-public-methods",
+    "redefined-outer-name",
+]
+
+[tool.pylint.master]
+ignore = "migrations"
