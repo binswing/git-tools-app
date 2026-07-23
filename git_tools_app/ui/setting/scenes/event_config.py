@@ -88,10 +88,8 @@ class EventConfigScene(BaseScene):
                 self._create_addon_for_event(config_context, event)
                 continue
                 
-            # Determine the selected addon's current relative position (0, 1, 2...)
             current_pos = next(i for i, (m_idx, _) in enumerate(event_addons) if m_idx == selected_idx)
             
-            # Generate the list of new target positions using actual addon names
             pos_choices = []
             for i in range(len(event_addons)):
                 target_name = event_addons[i][1]["name"]
@@ -110,23 +108,18 @@ class EventConfigScene(BaseScene):
             if new_pos == "cancel" or new_pos is None or new_pos == current_pos:
                 continue
                 
-            # SURGICAL REORDERING
             addon_to_move = addons.pop(selected_idx)
             
-            # Recalculate remaining event indices because popping changed the master array lengths
             remaining_event_addons = [(idx, a) for idx, a in enumerate(addons) if event in a.get("events", [])]
             
             if new_pos < len(remaining_event_addons):
-                # Insert directly before the addon that currently occupies the target position
                 target_master_idx = remaining_event_addons[new_pos][0]
                 addons.insert(target_master_idx, addon_to_move)
             else:
-                # If moved to the very bottom, insert it right after the last related addon
                 target_master_idx = remaining_event_addons[-1][0]
                 addons.insert(target_master_idx + 1, addon_to_move)
 
     def _create_addon_for_event(self, config_context: dict, event: str):
-        """Creates a new addon and automatically attaches it to the current event context."""
         available_hooks = get_available_hooks()
         
         self.clear_screen()
@@ -140,8 +133,11 @@ class EventConfigScene(BaseScene):
         name = questionary.text("Addon Name:").ask()
         if not name: return
 
+        # Calculate max padding dynamically based on the longest hook ID
+        max_pad = max((len(h_id) for h_id in available_hooks.keys()), default=15)
+
         hook_choices = [
-            questionary.Choice(f"{h_id:<12} | {data['schema']['name']}", value=h_id) 
+            questionary.Choice(f"{h_id:<{max_pad}} | {data['schema']['name']}", value=h_id) 
             for h_id, data in available_hooks.items()
         ]
         hook_type = questionary.select("Select Hook Type:", choices=hook_choices).ask()
@@ -171,7 +167,6 @@ class EventConfigScene(BaseScene):
         time.sleep(1.2)
 
     def _prompt_dynamic_schema(self, addon_id, schema_options):
-        """Processes dynamic fields based on the hook developer's schema."""
         new_opts = {}
         for opt in schema_options:
             default_val = opt.get("default", "")
@@ -179,16 +174,20 @@ class EventConfigScene(BaseScene):
             if opt["type"] == "file":
                 val = questionary.path(f"{opt['label']}:", default=default_val).ask()
                 
-                if val and opt.get("target_folder", "") not in val and Path(val).exists():
-                    target_folder = opt.get("target_folder", "assets")
-                    prefix = opt.get("target_name_prefix", "file_")
-                    file_ext = Path(val).suffix
-                    
-                    target_filename = f"{prefix}{addon_id}{file_ext}"
-                    
-                    success = import_external_file(val, target_folder, target_filename)
-                    if success:
-                        val = f"{target_folder}/{target_filename}"
+                if opt.get("copy", True):
+                    if val and opt.get("target_folder", "") not in val and Path(val).exists():
+                        target_folder = opt.get("target_folder", "assets")
+                        prefix = opt.get("target_name_prefix", "file_")
+                        file_ext = Path(val).suffix
+                        
+                        target_filename = f"{prefix}{addon_id}{file_ext}"
+                        
+                        success = import_external_file(val, target_folder, target_filename)
+                        if success:
+                            val = f"{target_folder}/{target_filename}"
+                else:
+                    if val and Path(val).exists():
+                        val = str(Path(val).expanduser().resolve())
                         
             elif opt["type"] == "text":
                 val = questionary.text(f"{opt['label']}:", default=default_val).ask()

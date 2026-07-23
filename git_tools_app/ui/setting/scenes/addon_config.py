@@ -55,7 +55,6 @@ class AddonConfigScene(BaseScene):
             if opt["type"] == "file":
                 val = questionary.path(f"{opt['label']}:", default=default_val).ask()
                 
-                # Check if the hook specifically wants to avoid copying the file
                 if opt.get("copy", True):
                     if val and opt.get("target_folder", "") not in val and Path(val).exists():
                         target_folder = opt.get("target_folder", "assets")
@@ -68,7 +67,6 @@ class AddonConfigScene(BaseScene):
                         if success:
                             val = f"{target_folder}/{target_filename}"
                 else:
-                    # Just store the absolute path to the file exactly where it lives
                     if val and Path(val).exists():
                         val = str(Path(val).expanduser().resolve())
                         
@@ -159,8 +157,11 @@ class AddonConfigScene(BaseScene):
         name = questionary.text("Addon Name:").ask()
         if not name: return "addon_list"
 
+        # Calculate max padding dynamically based on the longest hook ID
+        max_pad = max((len(h_id) for h_id in self.available_hooks.keys()), default=15)
+
         hook_choices = [
-            questionary.Choice(f"{h_id:<12} | {data['schema']['name']}", value=h_id) 
+            questionary.Choice(f"{h_id:<{max_pad}} | {data['schema']['name']}", value=h_id) 
             for h_id, data in self.available_hooks.items()
         ]
         hook_type = questionary.select("Select Hook Type:", choices=hook_choices).ask()
