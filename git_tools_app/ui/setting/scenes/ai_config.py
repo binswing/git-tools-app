@@ -8,15 +8,15 @@ logger = get_logger(__name__)
 class AIConfigScene(BaseScene):
     def run(self, config_context: dict) -> str:
         self.clear_screen()
-        logger.info("-- AI & PROVIDER SETTINGS --\n")
+        print("=== AI & MODEL CONFIG ===\n")
 
         providers = ["ollama", "openai", "gemini", "claude", "hf_inference"]
         current_provider = config_context.get("ai_provider", "ollama")
 
         provider_choices = [
-            questionary.Choice(title=f"  {p}", value=p) for p in providers
+            questionary.Choice(p, value=p) for p in providers
         ]
-        provider_choices.append(questionary.Choice(title="⬅️  Go Back", value="main_menu"))
+        provider_choices.append(questionary.Choice("Back", value="main_menu"))
 
         provider_choice = questionary.select(
             "Select AI Provider:",
@@ -25,31 +25,32 @@ class AIConfigScene(BaseScene):
         ).ask()
 
         if not provider_choice or provider_choice == "main_menu":
-            logger.debug("User selected Go Back from provider choice menu.")
+            logger.debug("User selected Back from provider choice menu.")
             return "main_menu"
 
         config_context["ai_provider"] = provider_choice
 
-        logger.info(f"\nFetching models for '{provider_choice}' via API...")
+        print(f"\nFetching models for '{provider_choice}'...")
         try:
             logger.debug(f"Importing provider module: git_tools_app.ai.ai_providers.{provider_choice}")
             provider_module = importlib.import_module(f"git_tools_app.ai.ai_providers.{provider_choice}")
             models = provider_module.get_models()
         except Exception as e:
             logger.error(f"Failed to fetch models for {provider_choice}: {e}", exc_info=True)
+            print(f"Error fetching models: {e}")
             input("\nPress ENTER to return to Main Menu...")
             return "main_menu"
 
         if not models:
-            logger.warning(f"No available models found for provider '{provider_choice}'.")
+            print(f"No available models found for provider '{provider_choice}'.")
             input("\nPress ENTER to return to Main Menu...")
             return "main_menu"
 
         current_model = config_context.get("model")
         model_choices = [
-            questionary.Choice(title=f"  {m}", value=m) for m in models
+            questionary.Choice(m, value=m) for m in models
         ]
-        model_choices.append(questionary.Choice(title="⬅️  Go Back", value="main_menu"))
+        model_choices.append(questionary.Choice("Back", value="main_menu"))
 
         model_choice = questionary.select(
             "Select Default Model:",

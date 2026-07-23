@@ -1,8 +1,9 @@
+#this file is not for general use, it is for internal use only. It is used to configure the hooks that are available in the git-tools-app. The hooks are used to trigger events in the git-tools-app
 import questionary
 from git_tools_app.ui.setting.base_scene import BaseScene
 from git_tools_app.utils.config import import_external_file
 from git_tools_app.utils.logger import get_logger
-
+from git_tools_app.core.events import SUPPORTED_EVENTS
 logger = get_logger(__name__)
 
 class HookConfigScene(BaseScene):
@@ -16,7 +17,6 @@ class HookConfigScene(BaseScene):
             elif current_view == "audio_config":
                 current_view = self.view_audio_config(config_context)
                 
-            # NEW: The routing state for the triggers menu
             elif current_view == "audio_triggers":
                 current_view = self.view_audio_triggers(config_context)
                 
@@ -25,54 +25,43 @@ class HookConfigScene(BaseScene):
 
     def view_hook_menu(self) -> str:
         self.clear_screen()
-        logger.info("-- HOOK SETTINGS --\n")
+        print("=== HOOK SETTINGS ===\n")
         
         choice = questionary.select(
-            "Select a hook to configure:",
+            "Select hook to configure:",
             choices=[
-                questionary.Choice("🎵 Audio Tag Hook", value="audio_config"),
-                questionary.Choice("⬅️  Go Back to Main Menu", value="main_menu")
+                questionary.Choice("Audio Tag Hook", value="audio_config"),
+                questionary.Choice("Back", value="main_menu")
             ]
         ).ask()
         
-        logger.debug(f"Hook menu choice: {choice}")
         return choice or "main_menu"
 
     def view_audio_config(self, config_context: dict) -> str:
         self.clear_screen()
-        logger.info("-- AUDIO TAG HOOK CONFIGURATION --\n")
+        print("=== AUDIO TAG CONFIGURATION ===\n")
         
         current_status = config_context.get("play_tags", True)
+        status_label = "Disable" if current_status else "Enable"
         
         choices = [
-            questionary.Choice("🔊 Enable Audio (Play Tags)", value="enable"),
-            questionary.Choice("🔇 Disable Audio (Silent Mode)", value="disable"),
-            questionary.Choice("📂 Import Custom Audio Tag (.wav)", value="import_audio"),
-            # NEW: Menu option to configure events
-            questionary.Choice("⚙️  Configure Trigger Events", value="audio_triggers"),
-            questionary.Choice("⬅️  Go Back to Hooks Menu", value="hook_menu")
+            questionary.Choice(f"Toggle Audio ({status_label})", value="toggle"),
+            questionary.Choice("Import Custom Audio (.wav)", value="import_audio"),
+            questionary.Choice("Configure Trigger Events", value="audio_triggers"),
+            questionary.Choice("Back", value="hook_menu")
         ]
-        
-        default_choice = choices[0] if current_status else choices[1]
 
         choice = questionary.select(
-            "What would you like to do?",
-            choices=choices,
-            default=default_choice
+            "Select action:",
+            choices=choices
         ).ask()
         
         if choice is None or choice == "hook_menu":
             return "hook_menu"
             
-        if choice == "enable":
-            logger.debug("Audio tags toggled ON in config context.")
-            config_context["play_tags"] = True
-            return "audio_config" # Stays on this menu
-            
-        elif choice == "disable":
-            logger.debug("Audio tags toggled OFF in config context.")
-            config_context["play_tags"] = False
-            return "audio_config" # Stays on this menu
+        if choice == "toggle":
+            config_context["play_tags"] = not current_status
+            return "audio_config"
             
         elif choice == "import_audio":
             self.import_audio_workflow()
@@ -82,43 +71,45 @@ class HookConfigScene(BaseScene):
             return "audio_triggers"
 
     def view_audio_triggers(self, config_context: dict) -> str:
-        """The checkbox view to select which Git commands trigger the audio."""
         self.clear_screen()
-        logger.info("-- AUDIO TAG: TRIGGER EVENTS --\n")
+        print("=== AUDIO TAG: TRIGGER EVENTS ===\n")
         
-        # Load the current context to figure out which boxes should be pre-checked
         current_events = config_context.get("audio_hook_events", ["post-push", "post-merge"])
         
-        choices = [
-            questionary.Choice("Post-Commit (Plays after AI generation)", value="post-commit", checked="post-commit" in current_events),
-            questionary.Choice("Post-Merge (Plays on successful merge)", value="post-merge", checked="post-merge" in current_events),
-            questionary.Choice("Post-Push (Plays when pushed to remote)", value="post-push", checked="post-push" in current_events),
+        events_list = [
+            questionary.Choice(
+                f"{evt['id']:<15} | {evt['description']}", 
+                value=evt["id"], 
+                checked=evt["id"] in current_events
+            )
+            for evt in SUPPORTED_EVENTS
         ]
         
         selected_events = questionary.checkbox(
-            "Select Git events to trigger the tag (Space to toggle, Enter to confirm):",
-            choices=choices
+            "Select trigger events (Space to toggle):",
+            choices=events_list
         ).ask()
         
-        # If the user didn't press Ctrl+C, save the array
         if selected_events is not None:
-            logger.debug(f"Audio trigger events updated to: {selected_events}")
             config_context["audio_hook_events"] = selected_events
             
-        # Drop them back into the audio config hub
         return "audio_config"
 
     def import_audio_workflow(self):
-        logger.info("")
+        print()
         file_path = questionary.path(
-            "Enter the path to your .wav file (Tab to autocomplete):"
+            "Path to .wav file (Tab to autocomplete):"
         ).ask()
         
         if file_path:
-            logger.debug(f"Initiating audio file import from path: {file_path}")
-            import_external_file(
+            success = import_external_file(
                 source_path=file_path, 
                 target_folder="assets", 
                 target_filename="producer_tag.wav"
             )
-            input("Press ENTER to continue...")
+            if success:
+                print("Audio import successful.")
+            else:
+                print("Import failed. Please check the file path.")
+                
+            input("\nPress ENTER to continue...")

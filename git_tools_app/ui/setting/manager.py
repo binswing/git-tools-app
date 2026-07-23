@@ -14,7 +14,7 @@ class SceneManager:
             "main_menu": MainMenuScene(),
             "ai_config": AIConfigScene(),
             "addon_config": AddonConfigScene(),
-            "event_config": EventConfigScene()
+            "event_config": EventConfigScene(),
         }
         self.current_scene_id = "main_menu"
 

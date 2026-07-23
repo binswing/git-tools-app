@@ -6,16 +6,16 @@ logger = get_logger(__name__)
 
 # Master registry of supported event triggers
 SUPPORTED_EVENTS = [
-    {"id": "pre-commit", "label": "pre-commit (Before commit executes)"},
-    {"id": "post-commit", "label": "post-commit (After commit succeeds)"},
-    {"id": "pre-push", "label": "pre-push (Before pushing to remote)"},
-    {"id": "post-push", "label": "post-push (After push succeeds)"},
-    {"id": "pre-checkout", "label": "pre-checkout (Before switching branches)"},
-    {"id": "post-checkout", "label": "post-checkout (After switching branches)"},
-    {"id": "pre-merge", "label": "pre-merge (Before branch merge)"},
-    {"id": "post-merge", "label": "post-merge (After branch merge)"},
-    {"id": "pre-pull", "label": "pre-pull (Before pulling changes)"},
-    {"id": "post-pull", "label": "post-pull (After pulling changes)"},
+    {"id": "pre-commit",    "label": "pre-commit",    "description": "Before commit executes"},
+    {"id": "post-commit",   "label": "post-commit",   "description": "After commit succeeds"},
+    {"id": "pre-push",      "label": "pre-push",      "description": "Before pushing to remote"},
+    {"id": "post-push",     "label": "post-push",     "description": "After push succeeds"},
+    {"id": "pre-checkout",  "label": "pre-checkout",  "description": "Before switching branches"},
+    {"id": "post-checkout", "label": "post-checkout", "description": "After switching branches"},
+    {"id": "pre-merge",     "label": "pre-merge",     "description": "Before branch merge"},
+    {"id": "post-merge",    "label": "post-merge",    "description": "After branch merge"},
+    {"id": "pre-pull",      "label": "pre-pull",      "description": "Before pulling changes"},
+    {"id": "post-pull",     "label": "post-pull",     "description": "After pulling changes"},
 ]
 
 def trigger(event_name, *args, **kwargs):
