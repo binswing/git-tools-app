@@ -10,20 +10,13 @@ def run(args):
     
     if not args:
         # User CLI help menu
-        logger.info("=========================================")
-        logger.info("█▀▀ ▀█▀ ▄▀█   █▀ █▀▀ ▀█▀ █ █ █▀█")
-        logger.info("█▄█  █  █▀█   ▄█ ██▄  █  █▄█ █▀▀")
-        logger.info("=========================================\n")
-        logger.info("GTA (Git Tool App)\n")
-        logger.info("GTA wraps standard Git. Any normal Git command (e.g., `gta status`, `gta rebase`)")
-        logger.info("will work exactly as expected by passing through to your system's Git.\n")
-        logger.info("Custom GTA Commands:")
-        logger.info("  commit      Generate an AI commit message based on staged changes")
-        logger.info("  push        Push commits to remote (Triggers post-push hooks)")
-        logger.info("  merge       Merge branches (Triggers post-merge hooks)")
-        logger.info("  setting     Launch the interactive UI to configure AI and Hooks")
-        logger.info("  help        Show this help message\n")
-        logger.info("To get standard Git help for a specific command, use: `gta help <command>`\n")
+        print("GTA (Git Tools App)\n")
+        print("GTA wraps standard Git. Any normal Git command (e.g., `gta status`, `gta rebase`)")
+        print("will work exactly as expected by passing through to your system's Git.\n")
+        print("Custom GTA Commands:")
+        print("  setting     Launch the interactive UI to configure AI and Hooks")
+        print("  help        Show this help message\n")
+        print("To get standard Git help for a specific command, use: `gta help <command>`\n")
     else:
         try:
             logger.debug(f"Passing help query to native git: git help {' '.join(args)}")

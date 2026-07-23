@@ -16,8 +16,8 @@ LOCAL_CONFIG_FILE = LOCAL_GTA_DIR / "config.json"
 FOLDER_NAMES = ["assets", "templates"]
 
 DEFAULT_CONFIG = {
-    "environment": "development",
-    "debug": True,
+    "environment": "production",
+    "debug": False,
     "ai_provider": "ollama",
     "model": "llama3",
     "addons": [

@@ -1,6 +1,6 @@
 {
-    "environment": "development",
-    "debug": true,
+    "environment": "production",
+    "debug": false,
     "ai_provider": "openai",
     "model": "gpt-4o",
     "addons": [
