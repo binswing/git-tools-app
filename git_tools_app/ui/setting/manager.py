@@ -1,4 +1,4 @@
-from git_tools_app.utils.config import load_config, save_config, CONFIG_FILE
+from git_tools_app.utils.config import load_config, save_config
 from git_tools_app.ui.setting.scenes.main_menu import MainMenuScene
 from git_tools_app.ui.setting.scenes.ai_config import AIConfigScene
 from git_tools_app.ui.setting.scenes.addon_config import AddonConfigScene

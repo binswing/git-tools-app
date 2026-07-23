@@ -1,5 +1,6 @@
 import questionary
 from git_tools_app.ui.setting.base_scene import BaseScene
+from git_tools_app.core.events import SUPPORTED_EVENTS
 from git_tools_app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -11,8 +12,7 @@ class EventConfigScene(BaseScene):
             logger.info("-- EXECUTION ORDER MANAGER --\n")
             logger.info("Because addons run sequentially, you can change their execution order here.\n")
             
-            events = ["post-commit", "post-merge", "post-push"]
-            choices = [questionary.Choice(e, value=e) for e in events]
+            choices = [questionary.Choice(item["label"], value=item["id"]) for item in SUPPORTED_EVENTS]
             choices.append(questionary.Choice("⬅️  Go Back", value="main_menu"))
             
             event = questionary.select("Select an event to manage order:", choices=choices).ask()
@@ -29,7 +29,6 @@ class EventConfigScene(BaseScene):
             self.clear_screen()
             logger.info(f"-- ORDER FOR: {event.upper()} --\n")
             
-            # Filter addons that trigger on this specific event
             event_addons = [(idx, a) for idx, a in enumerate(addons) if event in a.get("events", [])]
             
             if not event_addons:
@@ -55,7 +54,6 @@ class EventConfigScene(BaseScene):
             ]).ask()
             
             if action == "up" and selected_idx > 0:
-                # Swap in the master array
                 addons[selected_idx], addons[selected_idx - 1] = addons[selected_idx - 1], addons[selected_idx]
             elif action == "down" and selected_idx < len(addons) - 1:
                 addons[selected_idx], addons[selected_idx + 1] = addons[selected_idx + 1], addons[selected_idx]

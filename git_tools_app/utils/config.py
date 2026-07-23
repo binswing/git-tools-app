@@ -4,10 +4,15 @@ import shutil
 import uuid
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent
-DEFAULT_GTA_DIR = PROJECT_ROOT / ".gta"
-CONFIG_DIR = Path.home() / ".gta"
-CONFIG_FILE = CONFIG_DIR / "config.json"
+PACKAGE_ROOT = Path(__file__).parent.parent
+DEFAULT_GTA_DIR = PACKAGE_ROOT / ".gta"
+GLOBAL_CONFIG_DIR = Path.home() / ".gta"
+GLOBAL_CONFIG_FILE = GLOBAL_CONFIG_DIR / "config.json"
+
+# Capture the current working directory's .gta folder
+LOCAL_GTA_DIR = Path.cwd() / ".gta"
+LOCAL_CONFIG_FILE = LOCAL_GTA_DIR / "config.json"
+
 FOLDER_NAMES = ["assets", "templates"]
 
 DEFAULT_CONFIG = {
@@ -15,7 +20,6 @@ DEFAULT_CONFIG = {
     "debug": True,
     "ai_provider": "ollama",
     "model": "llama3",
-    # The new dynamic addon architecture
     "addons": [
         {
             "id": str(uuid.uuid4()),
@@ -31,21 +35,28 @@ DEFAULT_CONFIG = {
 }
 
 def load_config():
-    if CONFIG_FILE.exists():
+    """Loads settings cascadingly: Defaults -> Global Override -> Local Override."""
+    config = DEFAULT_CONFIG.copy()
+    # 1. Merge Global Config
+    if GLOBAL_CONFIG_FILE.exists():
         try:
-            with open(CONFIG_FILE, "r") as f:
-                user_config = json.load(f)
-                config = {**DEFAULT_CONFIG, **user_config}
+            with open(GLOBAL_CONFIG_FILE, "r") as f:
+                config.update(json.load(f))
         except json.JSONDecodeError:
-            print("[GTA Warning] Corrupted config.json file detected. Falling back to defaults.")
-            config = DEFAULT_CONFIG.copy()
-    else:
-        config = DEFAULT_CONFIG.copy()
+            print("[GTA Warning] Corrupted global config.json file detected. Ignoring.")
 
-    local_gta_dir = Path.cwd() / ".gta"
+    # 2. Merge Local Config (Overrides Global)
+    if LOCAL_CONFIG_FILE.exists():
+        try:
+            with open(LOCAL_CONFIG_FILE, "r") as f:
+                config.update(json.load(f))
+        except json.JSONDecodeError:
+            print(f"[GTA Warning] Corrupted local config.json in {LOCAL_GTA_DIR}. Ignoring.")
+
+    # 3. Resolve Directory Paths (Local vs Global vs Default)
     for folder_name in FOLDER_NAMES:
-        local_path = local_gta_dir / folder_name
-        global_path = CONFIG_DIR / folder_name
+        local_path = LOCAL_GTA_DIR / folder_name
+        global_path = GLOBAL_CONFIG_DIR / folder_name
         default_path = DEFAULT_GTA_DIR / folder_name
 
         if local_path.exists() and local_path.is_dir():
@@ -59,26 +70,44 @@ def load_config():
     return config
 
 def save_config(key, value):
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    config = load_config()
-    config[key] = value
+    """
+    Saves a setting. If a local .gta folder exists in the terminal's 
+    current directory, it saves to the local config. Otherwise, it saves globally.
+    """
+    target_dir = LOCAL_GTA_DIR if LOCAL_GTA_DIR.exists() else GLOBAL_CONFIG_DIR
+    target_file = target_dir / "config.json"
+    
+    target_dir.mkdir(parents=True, exist_ok=True)
 
+    # Only load the specific target file, NOT the fully merged config.
+    # This prevents accidentally writing all global settings into the local file.
+    file_config = {}
+    if target_file.exists():
+        try:
+            with open(target_file, "r") as f:
+                file_config = json.load(f)
+        except json.JSONDecodeError:
+            pass 
+
+    file_config[key] = value
+
+    # Filter out dynamic directory paths to prevent them from being hardcoded
     dynamic_keys = [f"{name}_dir" for name in FOLDER_NAMES] + ["commitmsg_prompt_path"]
-    static_config = {k: v for k, v in config.items() if k not in dynamic_keys}
+    static_config = {k: v for k, v in file_config.items() if k not in dynamic_keys}
     
     try:
-        with open(CONFIG_FILE, "w") as f:
+        with open(target_file, "w") as f:
             json.dump(static_config, f, indent=4)
     except Exception as e:
-        print(f"[GTA Error] Failed to write configuration to {CONFIG_FILE}: {e}")
+        print(f"[GTA Error] Failed to write configuration to {target_file}: {e}")
 
 def import_external_file(source_path: str, target_folder: str, target_filename: str) -> bool:
     source_file = Path(source_path).expanduser().resolve()
     if not source_file.exists() or not source_file.is_file():
         return False
     
-    local_gta = Path.cwd() / ".gta"
-    dest_dir = local_gta / target_folder if (local_gta.exists() and local_gta.is_dir()) else CONFIG_DIR / target_folder
+    # Intelligently routes file imports to the local folder if it exists
+    dest_dir = LOCAL_GTA_DIR / target_folder if (LOCAL_GTA_DIR.exists() and LOCAL_GTA_DIR.is_dir()) else GLOBAL_CONFIG_DIR / target_folder
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest_file = dest_dir / target_filename
     

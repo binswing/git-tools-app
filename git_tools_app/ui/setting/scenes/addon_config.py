@@ -3,6 +3,7 @@ from pathlib import Path
 import questionary
 from git_tools_app.ui.setting.base_scene import BaseScene
 from git_tools_app.core.hook_api import get_available_hooks
+from git_tools_app.core.events import SUPPORTED_EVENTS
 from git_tools_app.utils.logger import get_logger
 from git_tools_app.utils.config import import_external_file
 
@@ -78,10 +79,15 @@ class AddonConfigScene(BaseScene):
 
     def _prompt_events(self, existing_events=None):
         existing_events = existing_events or []
+        
+        # Dynamically build choice list from the master event registry
         events_list = [
-            questionary.Choice("post-commit", value="post-commit", checked="post-commit" in existing_events),
-            questionary.Choice("post-merge", value="post-merge", checked="post-merge" in existing_events),
-            questionary.Choice("post-push", value="post-push", checked="post-push" in existing_events),
+            questionary.Choice(
+                item["label"], 
+                value=item["id"], 
+                checked=item["id"] in existing_events
+            )
+            for item in SUPPORTED_EVENTS
         ]
         return questionary.checkbox("Select trigger events:", choices=events_list).ask() or []
 

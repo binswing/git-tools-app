@@ -54,6 +54,9 @@ def run(args):
     confirm = input("Do you want to commit with this message? (y/n): ")
     
     if confirm.lower() == 'y':
+        if not parsed_args.no_hooks:
+            events.trigger("pre-commit", parsed_args)
+
         git.execute_commit(message, extra_git_args)
         logger.info("Commit successful!")
         

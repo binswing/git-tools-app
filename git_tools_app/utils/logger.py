@@ -1,7 +1,7 @@
 import logging
 import json
 from datetime import datetime
-from git_tools_app.utils.config import CONFIG_DIR, load_config
+from git_tools_app.utils.config import GLOBAL_CONFIG_DIR, load_config
 
 class JsonFormatter(logging.Formatter):
     """Custom formatter to output logs as JSON strings."""
@@ -42,9 +42,11 @@ def get_logger(name="gta"):
     else:
         c_handler.setFormatter(logging.Formatter('%(message)s'))
         
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    # Ensure the global directory exists before writing logs
+    GLOBAL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    
     # 2. File Handler: JSONL output for deep debugging (Appends to ~/.gta/gta.log)
-    log_file = CONFIG_DIR / "gta.log"
+    log_file = GLOBAL_CONFIG_DIR / "gta.log"
     f_handler = logging.FileHandler(log_file, encoding="utf-8")
     f_handler.setLevel(logging.DEBUG)  # The file ALWAYS captures everything
     f_handler.setFormatter(JsonFormatter())

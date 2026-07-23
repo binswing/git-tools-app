@@ -4,6 +4,20 @@ from git_tools_app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Master registry of supported event triggers
+SUPPORTED_EVENTS = [
+    {"id": "pre-commit", "label": "pre-commit (Before commit executes)"},
+    {"id": "post-commit", "label": "post-commit (After commit succeeds)"},
+    {"id": "pre-push", "label": "pre-push (Before pushing to remote)"},
+    {"id": "post-push", "label": "post-push (After push succeeds)"},
+    {"id": "pre-checkout", "label": "pre-checkout (Before switching branches)"},
+    {"id": "post-checkout", "label": "post-checkout (After switching branches)"},
+    {"id": "pre-merge", "label": "pre-merge (Before branch merge)"},
+    {"id": "post-merge", "label": "post-merge (After branch merge)"},
+    {"id": "pre-pull", "label": "pre-pull (Before pulling changes)"},
+    {"id": "post-pull", "label": "post-pull (After pulling changes)"},
+]
+
 def trigger(event_name, *args, **kwargs):
     """Sequentially processes user addons assigned to the triggered event."""
     logger.debug(f"Triggering event: {event_name}")
@@ -11,9 +25,10 @@ def trigger(event_name, *args, **kwargs):
     config = load_config()
     addons = config.get("addons", [])
     available_hooks = get_available_hooks()
+    
     parsed_args = args[0] if len(args) > 0 else None
+    
     for addon in addons:
-        # Check if the addon is active and assigned to this event
         if addon.get("enabled", False) and event_name in addon.get("events", []):
             hook_type = addon.get("hook_type")
             hook_registry = available_hooks.get(hook_type)
@@ -25,7 +40,6 @@ def trigger(event_name, *args, **kwargs):
             try:
                 logger.debug(f"Executing addon '{addon.get('name')}' (Type: {hook_type})")
                 module = hook_registry["module"]
-                # Pass the addon's specific options to the hook template
                 module.execute(addon.get("options", {}), parsed_args, config)
             except Exception as e:
                 logger.error(f"Addon '{addon.get('name')}' failed during execution: {e}", exc_info=True)

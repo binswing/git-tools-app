@@ -17,20 +17,34 @@ def pass_through_to_git(args):
         sys.exit(1)
 
 def get_staged_diff():
-    """Fetches the staged changes, handling the initial commit edge case."""
+    """Fetches the staged changes, handling initial commits and UTF-8 encodings safely."""
     try:
-        # Check if HEAD exists (it won't on the very first commit of a new repo)
-        head_check = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], capture_output=True, text=True)
+        # Check if HEAD exists (it won't on an initial commit)
+        head_check = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
         
         if head_check.returncode != 0:
             logger.debug("Initial commit detected. Diffing against the empty tree hash.")
-            # This magic hash represents a completely empty Git tree
             diff_cmd = ["git", "diff", "--cached", "4b825dc642cb6eb9a060e54bf8d69288fbee4904"]
         else:
             diff_cmd = ["git", "diff", "--cached"]
 
-        result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
-        diff_output = result.stdout.strip()
+        result = subprocess.run(
+            diff_cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=True
+        )
+        
+        # Guard against NoneType before calling strip()
+        diff_output = (result.stdout or "").strip()
         
         if not diff_output:
             logger.warning("No staged changes found. Did you forget to run `git add`?")
@@ -39,40 +53,42 @@ def get_staged_diff():
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to fetch staged diff: {e}")
         return ""
-
-def execute_commit(message, extra_args=None):
-    """Executes the git commit command, passing through any extra flags."""
-    if extra_args is None:
-        extra_args = []
-        
-    # Construct the base command and append any extra flags (like --no-verify)
-    command = ["git", "commit", "-m", message] + extra_args
-    logger.debug(f"Executing commit command: {' '.join(command)}")
-    
-    try:
-        subprocess.run(command, check=True)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Git commit failed: {e}")
-        raise
+    except Exception as e:
+        logger.error(f"Unexpected error while getting staged diff: {e}")
+        return ""
 
 def get_recent_commits(limit=5):
-    """Fetches the recent commit history to provide context for the AI."""
+    """Fetches recent commit history for AI context."""
     try:
         logger.debug(f"Fetching last {limit} commits for AI context...")
         result = subprocess.run(
             ["git", "log", "-n", str(limit), "--oneline"],
             capture_output=True,
+            text=True,
             encoding="utf-8",
-            errors="replace",
-            text=True
+            errors="replace"
         )
-        
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-            
-        logger.debug("No previous commit history found (might be a new repository).")
-        return "No previous commits found."
-        
+        return (result.stdout or "").strip()
     except Exception as e:
-        logger.warning(f"Failed to fetch commit history: {e}", exc_info=True)
-        return "Could not retrieve commit history."
+        logger.error(f"Failed to fetch recent commits: {e}")
+        return ""
+
+def execute_commit(message, extra_args=None):
+    """Executes the git commit command, passing through extra flags."""
+    if extra_args is None:
+        extra_args = []
+        
+    command = ["git", "commit", "-m", message] + extra_args
+    logger.debug(f"Executing commit command: {' '.join(command)}")
+    
+    try:
+        subprocess.run(
+            command,
+            check=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git commit failed: {e}")
+        raise
