@@ -55,16 +55,22 @@ class AddonConfigScene(BaseScene):
             if opt["type"] == "file":
                 val = questionary.path(f"{opt['label']}:", default=default_val).ask()
                 
-                if val and opt.get("target_folder", "") not in val and Path(val).exists():
-                    target_folder = opt.get("target_folder", "assets")
-                    prefix = opt.get("target_name_prefix", "file_")
-                    file_ext = Path(val).suffix
-                    
-                    target_filename = f"{prefix}{addon_id}{file_ext}"
-                    
-                    success = import_external_file(val, target_folder, target_filename)
-                    if success:
-                        val = f"{target_folder}/{target_filename}"
+                # Check if the hook specifically wants to avoid copying the file
+                if opt.get("copy", True):
+                    if val and opt.get("target_folder", "") not in val and Path(val).exists():
+                        target_folder = opt.get("target_folder", "assets")
+                        prefix = opt.get("target_name_prefix", "file_")
+                        file_ext = Path(val).suffix
+                        
+                        target_filename = f"{prefix}{addon_id}{file_ext}"
+                        
+                        success = import_external_file(val, target_folder, target_filename)
+                        if success:
+                            val = f"{target_folder}/{target_filename}"
+                else:
+                    # Just store the absolute path to the file exactly where it lives
+                    if val and Path(val).exists():
+                        val = str(Path(val).expanduser().resolve())
                         
             elif opt["type"] == "text":
                 val = questionary.text(f"{opt['label']}:", default=default_val).ask()
@@ -74,7 +80,6 @@ class AddonConfigScene(BaseScene):
         return new_opts
 
     def _prompt_events(self, existing_events=None):
-        """Step 1: Selecting the Git Command for the Addon Triggers"""
         commands = ["commit", "push", "checkout", "merge", "pull"]
         selected_events = set(existing_events or [])
 
@@ -89,7 +94,6 @@ class AddonConfigScene(BaseScene):
                 pre_evt = f"pre-{cmd}"
                 post_evt = f"post-{cmd}"
                 
-                # Check current status to populate the right column
                 active = []
                 if pre_evt in selected_events: active.append("pre")
                 if post_evt in selected_events: active.append("post")
@@ -113,7 +117,6 @@ class AddonConfigScene(BaseScene):
             self._configure_command_events(selected_cmd, selected_events)
 
     def _configure_command_events(self, cmd: str, selected_events: set):
-        """Step 2: Toggling Pre and Post phases for the selected command"""
         self.clear_screen()
         print(f"=== {cmd.upper()} TRIGGERS ===\n")
 
@@ -139,10 +142,8 @@ class AddonConfigScene(BaseScene):
         ).ask()
 
         if result is not None:
-            # Remove previous selections for this command to prevent ghosting
             selected_events.discard(pre_evt)
             selected_events.discard(post_evt)
-            # Re-apply the newly checked triggers
             for evt in result:
                 selected_events.add(evt)
 
@@ -169,8 +170,6 @@ class AddonConfigScene(BaseScene):
         
         new_addon_id = str(uuid.uuid4())
         
-        # Clear the screen again so the schema prompts have a clean slate 
-        # after exiting the event drill-down loop.
         self.clear_screen()
         print(f"=== CONFIGURE OPTIONS: {name.upper()} ===\n")
         

@@ -20,8 +20,8 @@ requirements.txt
 # Misc
 *.ipynb
 uv.lock
-note.txt
-
+/.gta
+/test
 # Delete the draft of the entire project done
 !draft.ipynb
 
