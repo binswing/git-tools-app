@@ -1,0 +1,2 @@
+include git_tools_app/config.json
+recursive-include git_tools_app *.md *.wav

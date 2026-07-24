@@ -1,0 +1,21 @@
+{
+    "environment": "production",
+    "debug": false,
+    "ai_provider": "openai",
+    "model": "gpt-4o",
+    "addons": [
+        {
+            "id": "a50afb48-eda9-4b85-81e6-48ce8afd0d53",
+            "name": "Producer Tag",
+            "hook_type": "audio",
+            "events": [
+                "post-push",
+                "post-merge"
+            ],
+            "options": {
+                "audio_path": "assets/producer_tag.wav"
+            },
+            "enabled": true
+        }
+    ]
+}
