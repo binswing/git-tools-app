@@ -1,4 +1,4 @@
-Read the code diff and write a SINGLE-LINE commit message following the Conventional Commits format (feat:, fix:, docs:, chore:, etc.). 
+Read the code diff and write a SINGLE-LINE commit message following the Conventional Commits format (feat:, fix:, docs:, chore:, etc.).
 
 CRITICAL RULES:
 1. Do NOT include a description body.

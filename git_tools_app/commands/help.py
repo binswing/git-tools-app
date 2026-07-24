@@ -1,13 +1,17 @@
+"""Help Command."""
+
 import subprocess
 import sys
+
 from git_tools_app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 def run(args):
-    """Overrides the default git help command to show GTA features first."""
+    """Override the default git help command to show GTA features first."""
     logger.debug(f"Running help command with args: {args}")
-    
+
     if not args:
         # User CLI help menu
         print("GTA (Git Tools App)\n")

@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     { name = "b1nswing" }
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
     "requests",
     "pygame",
@@ -81,8 +81,10 @@ exclude = [
     "venv",
     "build"
 ]
+venvPath = "."
+venv = ".venv"
 stubPath = "typings"
-pythonVersion = "3.8"
+pythonVersion = "3.12"
 typeCheckingMode = "standard"
 
 # Tightened from defaults — cheap real-bug catchers
@@ -95,7 +97,7 @@ reportImplicitOverride = "warning"
 
 [tool.flake8]
 docstring-convention = "all"
-ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100"]
+ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100", "D401"]
 exclude = "venv|\\.venv|build|migrations"
 max-line-length = 119
 # radon

@@ -1,4 +1,5 @@
-import os
+"""Utility functions for the GTA configuration tool."""
+
 import json
 import shutil
 import uuid
@@ -26,13 +27,12 @@ DEFAULT_CONFIG = {
             "name": "Producer Tag",
             "hook_type": "audio",
             "events": ["post-push", "post-merge"],
-            "options": {
-                "audio_path": "assets/producer_tag.wav"
-            },
-            "enabled": True
+            "options": {"audio_path": "assets/producer_tag.wav"},
+            "enabled": True,
         }
-    ]
+    ],
 }
+
 
 def load_config():
     """Loads settings cascadingly: Defaults -> Global Override -> Local Override."""
@@ -69,14 +69,12 @@ def load_config():
     config["commitmsg_prompt_path"] = str(Path(config["templates_dir"]) / "COMMITMSG.md")
     return config
 
+
 def save_config(key, value):
-    """
-    Saves a setting. If a local .gta folder exists in the terminal's 
-    current directory, it saves to the local config. Otherwise, it saves globally.
-    """
+    """Saves a setting. If a local .gta folder exists in the terminal'scurrent directory, it saves to the local config. Otherwise, it saves globally."""
     target_dir = LOCAL_GTA_DIR if LOCAL_GTA_DIR.exists() else GLOBAL_CONFIG_DIR
     target_file = target_dir / "config.json"
-    
+
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Only load the specific target file, NOT the fully merged config.
@@ -87,30 +85,36 @@ def save_config(key, value):
             with open(target_file, "r") as f:
                 file_config = json.load(f)
         except json.JSONDecodeError:
-            pass 
+            pass
 
     file_config[key] = value
 
     # Filter out dynamic directory paths to prevent them from being hardcoded
     dynamic_keys = [f"{name}_dir" for name in FOLDER_NAMES] + ["commitmsg_prompt_path"]
     static_config = {k: v for k, v in file_config.items() if k not in dynamic_keys}
-    
+
     try:
         with open(target_file, "w") as f:
             json.dump(static_config, f, indent=4)
     except Exception as e:
         print(f"[GTA Error] Failed to write configuration to {target_file}: {e}")
 
+
 def import_external_file(source_path: str, target_folder: str, target_filename: str) -> bool:
+    """Imports an external file into the GTA configuration directories."""
     source_file = Path(source_path).expanduser().resolve()
     if not source_file.exists() or not source_file.is_file():
         return False
-    
+
     # Intelligently routes file imports to the local folder if it exists
-    dest_dir = LOCAL_GTA_DIR / target_folder if (LOCAL_GTA_DIR.exists() and LOCAL_GTA_DIR.is_dir()) else GLOBAL_CONFIG_DIR / target_folder
+    dest_dir = (
+        LOCAL_GTA_DIR / target_folder
+        if (LOCAL_GTA_DIR.exists() and LOCAL_GTA_DIR.is_dir())
+        else GLOBAL_CONFIG_DIR / target_folder
+    )
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest_file = dest_dir / target_filename
-    
+
     try:
         shutil.copyfile(source_file, dest_file)
         return True

@@ -1,14 +1,23 @@
-from git_tools_app.utils.config import load_config, save_config
-from git_tools_app.ui.setting.scenes.main_menu import MainMenuScene
-from git_tools_app.ui.setting.scenes.ai_config import AIConfigScene
+"""Scene manager for handling different UI scenes in the settings interface."""
+
 from git_tools_app.ui.setting.scenes.addon_config import AddonConfigScene
+from git_tools_app.ui.setting.scenes.ai_config import AIConfigScene
 from git_tools_app.ui.setting.scenes.event_config import EventConfigScene
+from git_tools_app.ui.setting.scenes.main_menu import MainMenuScene
+from git_tools_app.utils.config import (
+    load_config,
+    save_config,
+)
 from git_tools_app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class SceneManager:
+    """Manages the flow between different UI scenes in the settings interface."""
+
     def __init__(self):
+        """Initializes the SceneManager with the available scenes and loads the configuration."""
         self.config_context = load_config()
         self.scenes = {
             "main_menu": MainMenuScene(),
@@ -19,9 +28,11 @@ class SceneManager:
         self.current_scene_id = "main_menu"
 
     def run(self):
+        """Runs the scene manager, handling transitions between scenes based on user input."""
         while self.current_scene_id not in ["quit_save", "quit_discard"]:
             scene_obj = self.scenes.get(self.current_scene_id)
-            if not scene_obj: break
+            if not scene_obj:
+                break
             self.current_scene_id = scene_obj.run(self.config_context)
 
         if self.current_scene_id == "quit_save":
