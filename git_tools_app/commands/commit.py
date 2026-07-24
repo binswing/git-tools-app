@@ -15,6 +15,13 @@ from git_tools_app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def has_git_message(args):
+    """Return whether Git was given a commit message argument."""
+    return any(
+        arg == "-m" or arg.startswith("-m") or arg == "--message" or arg.startswith("--message=") for arg in args
+    )
+
+
 def get_commit_prompt(config):
     """Load the commit prompt template from the config or use the default."""
     prompt_path = config.get("commitmsg_prompt_path")
@@ -33,6 +40,10 @@ def run(args):
     parser.add_argument("--model", type=str, help="Override default model")
     parser.add_argument("--no-hooks", action="store_true", help="Skip all post-execution features")
     parsed_args, extra_git_args = parser.parse_known_args(args)
+
+    if has_git_message(extra_git_args):
+        git.pass_through_to_git(["commit", *extra_git_args])
+        return
 
     config = load_config()
     models = ai.get_installed_models()
