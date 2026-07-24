@@ -2,11 +2,10 @@
 
 import os
 
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 
 from git_tools_app.utils.logger import get_logger
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 logger = get_logger(__name__)
 

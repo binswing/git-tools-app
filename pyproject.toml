@@ -97,7 +97,7 @@ reportImplicitOverride = "warning"
 
 [tool.flake8]
 docstring-convention = "all"
-ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100", "D401", "D406", "D407"]
+ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100", "D401", "D406", "D407", "E402"]
 exclude = "venv|\\.venv|build|migrations"
 max-line-length = 119
 # radon
